@@ -1,0 +1,19 @@
+{
+	"name": "blogg-api",
+	"version": "1.0.0",
+	"description": "backend for the application blogg",
+	"type": "module",
+	"main": "index.js",
+	"scripts": {
+		"dev": "nodemon src/index.js"
+	},
+	"keywords": [
+		"blogg"
+	],
+	"author": "Ramesh Neupane",
+	"license": "ISC",
+	"devDependencies": {
+		"nodemon": "^3.0.1",
+		"prettier": "^3.0.3"
+	}
+}
