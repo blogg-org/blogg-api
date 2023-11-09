@@ -2,16 +2,27 @@ import app from "./app.js";
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 
-// load env variables
+/*
+==============================================
+LOAD .env FILE
+==============================================
+ */
 dotenv.config({
 	path: "./.env",
 });
 
 const PORT = process.env.PORT || 8000;
 
-// database connection
+/*
+==============================================
+DATABASE CONNECTION AND APP SERVER START
+==============================================
+ */
 connectDB()
-	.then(() => {
+	.then((dbConnection) => {
+		console.log(
+			`\n:: MongoDB connected.\n:: DB Host: ${dbConnection.connection.host}`
+		);
 		// app server
 		const server = app.listen(PORT, () => {
 			console.log(
@@ -24,11 +35,14 @@ connectDB()
 			console.error("\n:: Server error: ", error);
 		});
 
-		// // server stop
+		// server stop
 		process.on("SIGINT", () => {
-			server.close(() => {
-				console.log("\n:: Server closed.");
-				process.exit(0);
+			dbConnection.connection.close().then(() => {
+				console.log("\n:: MongoDB disconnected.");
+				server.close(() => {
+					console.log("\n:: Server disconnected.");
+					process.exit(0);
+				});
 			});
 		});
 	})

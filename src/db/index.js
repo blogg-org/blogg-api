@@ -4,11 +4,10 @@ import { DB_NAME } from "../constants.js";
 const connectDB = async () => {
 	try {
 		const dbConnection = await mongoose.connect(
-			`${String(process.env.MONGODB_URI)}/${DB_NAME}`
+			`${String(process.env.MONGODB_URI)}/${DB_NAME}`,
+			{ family: 4 }
 		);
-		console.log(
-			`\n:: MongoDB connected.\n:: DB Host: ${dbConnection.connection.host}`
-		);
+		return dbConnection;
 	} catch (error) {
 		console.error(`\n:: MongoDB connection ERROR :: ${error}`);
 		process.exit(1);
