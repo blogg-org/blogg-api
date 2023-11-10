@@ -2,15 +2,20 @@ import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { corsOrigins } from "./utils/corsOrigins.js";
+import userRouter from "./routes/user.route.js";
 
-// app instance
+/*
+==============================================
+APP INSTANCE
+==============================================
+ */
 const app = express();
 
-/*****************
- *
- * MIDDLEWARES
- *
- *****************/
+/*
+==============================================
+MIDDLEWARES - PLUGINS
+==============================================
+ */
 
 //CORS: Cross-Origin Resource Sharing middleware
 app.use(
@@ -33,6 +38,7 @@ app.use(
 app.use(
 	express.urlencoded({
 		limit: "32kb",
+		extended: false,
 	})
 );
 
@@ -42,11 +48,13 @@ app.use(express.static("public"));
 // cookie parser middleware
 app.use(cookieParser());
 
-/*****************
- *
- * ROOT ROUTE
- *
- *****************/
+app.use("/api/users", userRouter);
+
+/*
+==============================================
+ROOT ROUTE
+==============================================
+ */
 app.get("/", (req, res) => {
 	res.json({
 		app: "blogg-api",
