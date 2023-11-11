@@ -1,7 +1,13 @@
 import mongoose from "mongoose";
 import pkg from "bcryptjs";
+import jwt from "jsonwebtoken";
 const { genSalt, hash, compare } = pkg;
 
+/*
+==============================================
+USER SCHEMA
+==============================================
+ */
 const userSchema = new mongoose.Schema(
 	{
 		fullname: {
@@ -19,14 +25,23 @@ const userSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
+		refreshToken: {
+			type: String,
+		},
 	},
 	{ timestamps: true }
 );
 
+/*
+==============================================
+USER SCHEMA MIDDLEWARES - PLUGINS
+==============================================
+ */
 // hash password before user is saved to database
 userSchema.pre("save", async function (next) {
-	const user = this;
 	try {
+		const user = this;
+		if (!user.isModified("password")) return next();
 		const salt = await genSalt(10);
 		const hashedPassword = await hash(user.password, salt);
 		user.password = hashedPassword;
@@ -43,4 +58,37 @@ userSchema.method("comparePassword", async function comparePassword(password) {
 	return isMatched;
 });
 
+// generate access token
+userSchema.method("generateAccessToken", function generateAccessToken() {
+	return jwt.sign(
+		{
+			_id: this._id,
+			fullname: this.fullname,
+			email: this.email,
+		},
+		process.env.ACCESS_TOKEN_SECRET,
+		{
+			expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+		}
+	);
+});
+
+// generate refresh token
+userSchema.method("generateRefreshToken", function generateRefreshToken() {
+	return jwt.sign(
+		{
+			_id: this._id,
+		},
+		process.env.REFRESH_TOKEN_SECRET,
+		{
+			expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+		}
+	);
+});
+
+/*
+==============================================
+USER MODEL
+==============================================
+ */
 export const User = mongoose.model("User", userSchema);
