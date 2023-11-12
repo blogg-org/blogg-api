@@ -37,6 +37,15 @@ const userSchema = new mongoose.Schema(
 USER SCHEMA MIDDLEWARES - PLUGINS
 ==============================================
  */
+// userSchema.pre("validate", async function (next) {
+// 	try {
+// 		await this.validate(["fullname", "email", "password"]);
+// 		next();
+// 	} catch (error) {
+// 		next(error);
+// 	}
+// });
+
 // hash password before user is saved to database
 userSchema.pre("save", async function (next) {
 	try {
