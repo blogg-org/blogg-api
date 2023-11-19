@@ -4,6 +4,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 // signup - create new user
 export const handleSignup = async (req, res) => {
 	try {
+		// console.log("req body: ", req.body);
 		const { fullname, email, password } = req.body;
 		const user = new User({ fullname, email, password });
 		const userFromDB = await user.save();
@@ -12,22 +13,20 @@ export const handleSignup = async (req, res) => {
 			new ApiResponse(201, userFromDB, "Sign up successful.")
 		);
 	} catch (error) {
-		// console.log("\n:: Error", error);
-
 		if (error.code === 11000 && error.keyPattern.email) {
 			error.message = "email is already used";
 		} else if (error.errors && Object.keys(error.errors).length > 0) {
-			if (error.errors.email?.kind === "required") {
-				error.message = "email is required";
-			}
 			if (error.errors.fullname?.kind === "required") {
-				error.message = "fullname is required";
+				error.message += " fullname is required";
+			}
+			if (error.errors.email?.kind === "required") {
+				error.message = " email is required";
 			}
 			if (error.errors.password?.kind === "required") {
-				error.message = "password is required";
+				error.message += " password is required";
 			}
 		}
-
+		console.log("\n:: Error", error.message);
 		res.status(400).json(new ApiResponse(400, null, error.message));
 	}
 };
@@ -59,8 +58,13 @@ export const handleSignin = async (req, res) => {
 				const refreshToken = user.generateRefreshToken();
 				user.refreshToken = refreshToken;
 				await user.save();
+				res.cookie("refresh_token", refreshToken, {
+					expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // expires in 10 days
+					httpOnly: true,
+				});
 
 				user.password = undefined;
+				user.refreshToken = undefined;
 				res.status(200).json(
 					new ApiResponse(200, user, "Sign in successful")
 				);

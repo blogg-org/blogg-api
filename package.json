@@ -3,8 +3,9 @@
 	"version": "1.0.0",
 	"description": "backend for the application blogg",
 	"type": "module",
-	"main": "index.js",
+	"main": "src/index.js",
 	"scripts": {
+		"start": "node src/index.js",
 		"dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
 	},
 	"keywords": [
