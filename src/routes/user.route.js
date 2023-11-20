@@ -5,11 +5,12 @@ import {
 	handleGetUserById,
 	handleSignin,
 } from "../controllers/user.controller.js";
+import limiter from "../middlewares/limiter.middleware.js";
 
 const userRouter = express.Router();
-userRouter.get("/", handleGetAllUsers);
-userRouter.post("/signup", handleSignup);
-userRouter.post("/signin", handleSignin);
+userRouter.route("/").get(handleGetAllUsers);
+userRouter.route("/signup").post(limiter, handleSignup);
+userRouter.route("/signin").post(limiter, handleSignin);
 userRouter.route("/:userId").get(handleGetUserById);
 
 export default userRouter;
