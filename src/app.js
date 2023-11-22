@@ -1,8 +1,9 @@
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
-import { corsOrigins } from "./utils/corsOrigins.js";
 import userRouter from "./routes/user.route.js";
+import authRouter from "./routes/auth.route.js";
+import { corsOrigins } from "./utils/corsOrigins.js";
 
 /*
 ==============================================
@@ -48,7 +49,8 @@ app.use(express.static("public"));
 // cookie parser middleware
 app.use(cookieParser());
 
-app.use("/api/users", userRouter);
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/users", userRouter);
 
 /*
 ==============================================
