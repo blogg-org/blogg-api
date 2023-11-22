@@ -20,7 +20,7 @@ MIDDLEWARES - PLUGINS
 //CORS: Cross-Origin Resource Sharing middleware
 app.use(
 	cors({
-		origin: process.env.CORS_ORIGINS,
+		origin: String(process.env.CORS_ORIGINS),
 		optionsSuccessStatus: 200,
 		credentials: true,
 		methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
