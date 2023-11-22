@@ -11,6 +11,9 @@ APP INSTANCE
  */
 const app = express();
 
+// Enable preflight requests for all routes
+app.options("*", cors());
+
 /*
 ==============================================
 MIDDLEWARES - PLUGINS
