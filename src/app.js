@@ -3,7 +3,6 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
-import { corsOrigins } from "./utils/corsOrigins.js";
 
 /*
 ==============================================
@@ -21,9 +20,10 @@ MIDDLEWARES - PLUGINS
 //CORS: Cross-Origin Resource Sharing middleware
 app.use(
 	cors({
-		origin: corsOrigins,
+		origin: process.env.CORS_ORIGINS,
 		optionsSuccessStatus: 200,
 		credentials: true,
+		methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 	})
 );
 
