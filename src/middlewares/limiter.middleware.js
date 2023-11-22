@@ -15,6 +15,7 @@ const limiter = rateLimit({
 			new ApiResponse(options.statusCode, null, options.message)
 		);
 	},
+	validate: { xForwardedForHeader: false },
 });
 
 export default limiter;
