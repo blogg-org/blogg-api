@@ -1,80 +1,156 @@
 import { User } from "../models/user.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
 
-// signup - create new user
-export const handleSignup = async (req, res) => {
-	try {
-		const { fullname, email, password } = req.body;
-		if (!fullname || !email || !password) {
-			return res
-				.status(400)
-				.json(new ApiResponse(400, null, "All fields are required."));
-		}
-		const user = new User({ fullname, email, password });
-		const userFromDB = await user.save();
-		userFromDB.password = undefined;
-		res.status(201).json(new ApiResponse(201, null, "Sign up successful."));
-	} catch (error) {
-		if (error.code === 11000 && error.keyPattern.email) {
-			error.message = "email is already used";
-		}
-		console.log("\n:: Error", error.message);
-		res.status(400).json(new ApiResponse(400, null, error.message));
+/*
+==============================================
+AUTH CONTROLLER - SIGNUP
+==============================================
+ */
+export const handleSignup = asyncHandler(async (req, res) => {
+	const { fullname, email, password } = req.body;
+	console.log(fullname, email, password);
+
+	if (!fullname || !email || !password) {
+		return res
+			.status(400)
+			.json(new ApiError(400, "All fields are required").toJSON());
 	}
-};
 
-// signin - handle login
-export const handleSignin = async (req, res) => {
-	try {
-		const { email, password } = req.body;
-		if (!email || !password) {
-			return res
-				.status(400)
-				.json(new ApiResponse(400, null, "All fields are required."));
-		}
-		const user = await User.findOne({ email });
-		if (!user) {
-			res.status(401).json(
-				new ApiResponse(400, null, "Invalid credentials")
+	const existedUser = await User.findOne({ email });
+	if (existedUser) {
+		return res
+			.status(409)
+			.json(new ApiError(409, "Email is already used").toJSON());
+	}
+
+	const user = new User({ fullname, email, password });
+	const userFromDB = await user.save();
+	if (userFromDB) {
+		return res
+			.status(201)
+			.json(new ApiResponse(201, null, "Sign up successful"));
+	} else {
+		return res
+			.status(500)
+			.json(
+				new ApiError(
+					500,
+					"Something went wrong while signing up"
+				).toJSON()
 			);
-		} else {
-			const isPasswordMatched = await user.comparePassword(password);
-			if (!isPasswordMatched) {
-				res.status(401).json(
-					new ApiResponse(401, null, "Invalid password")
-				);
-			} else {
-				// generate access token and send cookie response
-				const accessToken = user.generateAccessToken();
-				res.cookie("access_token", accessToken, {
-					expires: new Date(Date.now() + 30 * 1000), // expires in 1 hour
-					httpOnly: true,
-					secure: true,
-					sameSite: "None",
-				});
-
-				// generate refresh token and save into the database
-				const refreshToken = user.generateRefreshToken();
-				user.refreshToken = refreshToken;
-				await user.save();
-				res.cookie("refresh_token", refreshToken, {
-					expires: new Date(Date.now() + 30 * 1000), // expires in 10 days
-					httpOnly: true,
-					secure: true,
-					sameSite: "None",
-				});
-
-				user.password = undefined;
-				user.refreshToken = undefined;
-				res.status(200).json(
-					new ApiResponse(200, null, "Sign in successful")
-				);
-			}
-		}
-	} catch (error) {
-		console.error(error);
-		res.status(500).json(
-			new ApiResponse(500, null, "Internal server error")
-		);
 	}
-};
+});
+
+/*
+==============================================
+AUTH CONTROLLER - SIGNIN
+==============================================
+ */
+export const handleSignin = asyncHandler(async (req, res) => {
+	const { email, password } = req.body;
+
+	// validate input fields
+	if (!email || !password) {
+		return res
+			.status(400)
+			.json(new ApiError(400, "All fields are required").toJSON());
+	}
+
+	// find user with unique email id
+	const user = await User.findOne({ email });
+	if (!user) {
+		return res
+			.status(401)
+			.json(new ApiError(401, "Invalid credentials").toJSON());
+	}
+
+	// compare password
+	const isPasswordMatched = await user.comparePassword(password);
+	if (!isPasswordMatched) {
+		return res
+			.status(401)
+			.json(new ApiError(401, "Invalid credentials").toJSON());
+	}
+
+	// generate refresh token and save into the database
+	const refreshToken = user.generateRefreshToken();
+	user.refreshToken = refreshToken;
+	await user.save();
+	res.cookie("refresh_token", refreshToken, {
+		expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // expires in 1 day
+		httpOnly: true,
+	});
+
+	// generate access token
+	const accessToken = user.generateAccessToken();
+	res.status(200).json(
+		new ApiResponse(200, { accessToken }, "Sign in successful")
+	);
+});
+
+/*
+==============================================
+AUTH CONTROLLER - REFRESH
+==============================================
+ */
+export const handleRefresh = asyncHandler(async (req, res) => {
+	console.log("\n:: handleRefresh => refresh_token: ", req.cookies);
+	const cookies = req.cookies;
+	if (!cookies?.refresh_token) {
+		return res.status(401).json(new ApiError(401, "Unauthorized").toJSON());
+	}
+
+	jwt.verify(
+		cookies.refresh_token,
+		process.env.REFRESH_TOKEN_SECRET,
+		async (error, decoded) => {
+			if (error) {
+				return res
+					.status(403)
+					.json(new ApiError(403, "Forbidden").toJSON());
+			}
+
+			const user = await User.findById(decoded._id);
+			if (!user) {
+				return res
+					.status(401)
+					.json(new ApiError(401, "Unauthorized").toJSON());
+			}
+			const accessToken = user.generateAccessToken();
+			return res.status(200).json(new ApiResponse(200, { accessToken }));
+		}
+	);
+});
+
+/*
+==============================================
+AUTH CONTROLLER - SIGNOUT
+==============================================
+ */
+export const handleSignout = asyncHandler(async (req, res) => {
+	const user = req.user;
+
+	// update user's refresh token to empty in database
+	const updatedUser = await User.findByIdAndUpdate(user._id, {
+		$set: { refreshToken: "" },
+	});
+	if (!updatedUser) {
+		return res
+			.status(500)
+			.json(
+				new ApiError(
+					500,
+					"Something went wrong while signing out"
+				).toJSON()
+			);
+	}
+
+	// clear refresh_token cookie
+	res.clearCookie("refresh_token");
+	return res
+		.status(200)
+		.json(new ApiResponse(200, null, "Sign out successful."));
+});
