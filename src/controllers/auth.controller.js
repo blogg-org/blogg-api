@@ -82,7 +82,6 @@ export const handleSignin = asyncHandler(async (req, res) => {
 	res.cookie("refresh_token", refreshToken, {
 		expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // expires in 1 day
 		httpOnly: true,
-		sameSite: "None",
 	});
 
 	// generate access token
@@ -98,6 +97,7 @@ AUTH CONTROLLER - REFRESH
 ==============================================
  */
 export const handleRefresh = asyncHandler(async (req, res) => {
+	console.log("\n:: handleRefresh => refresh_token: ", req.cookies);
 	const cookies = req.cookies;
 	if (!cookies?.refresh_token) {
 		return res.status(401).json(new ApiError(401, "Unauthorized").toJSON());
@@ -125,5 +125,32 @@ export const handleRefresh = asyncHandler(async (req, res) => {
 	);
 });
 
-// signout
-export const handleSignout = (req, res) => {};
+/*
+==============================================
+AUTH CONTROLLER - SIGNOUT
+==============================================
+ */
+export const handleSignout = asyncHandler(async (req, res) => {
+	const user = req.user;
+
+	// update user's refresh token to empty in database
+	const updatedUser = await User.findByIdAndUpdate(user._id, {
+		$set: { refreshToken: "" },
+	});
+	if (!updatedUser) {
+		return res
+			.status(500)
+			.json(
+				new ApiError(
+					500,
+					"Something went wrong while signing out"
+				).toJSON()
+			);
+	}
+
+	// clear refresh_token cookie
+	res.clearCookie("refresh_token");
+	return res
+		.status(200)
+		.json(new ApiResponse(200, null, "Sign out successful."));
+});

@@ -6,6 +6,7 @@ import {
 	handleSignout,
 	handleSignup,
 } from "../controllers/auth.controller.js";
+import checkAuth from "../middlewares/checkAuth.middleware.js";
 
 /*
 ==============================================
@@ -17,6 +18,6 @@ const authRouter = Router();
 authRouter.route("/signup").post(limiter, handleSignup);
 authRouter.route("/signin").post(limiter, handleSignin);
 authRouter.route("/refresh").get(handleRefresh);
-authRouter.route("/signout").post(handleSignout);
+authRouter.route("/signout").post(checkAuth, handleSignout);
 
 export default authRouter;

@@ -26,7 +26,6 @@ USER CONTROLLER - GET CURRENT USER
  */
 export const handleGetCurrentUser = asyncHandler(async (req, res) => {
 	const user = req.user;
-	console.log("\n:: user.controller => handleGetCurrentUser => user: ", user);
 
 	const userFromDB = await User.findById(user._id).select(
 		"-password -refreshToken"
