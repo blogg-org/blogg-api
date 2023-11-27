@@ -15,10 +15,30 @@ export const uploadOnCloudinary = async (localFilePath) => {
 			resource_type: "auto",
 		});
 		// file has been uploaded successfully
-		console.log("upload succeeded. ", response);
+		fs.unlinkSync(localFilePath);
+		// console.log("upload succeeded. ", response);
 		return response;
 	} catch (error) {
 		fs.unlinkSync(localFilePath); // remove locally saved temporary file upon upload error
+		return null;
+	}
+};
+
+export const deleteFeaturedImageFromCloudinary = async (url) => {
+	if (!url) return null;
+	try {
+		const publicId = url.split("/").pop().split(".")[0];
+		const response = await cloudinary.uploader.destroy(publicId, {
+			invalidate: true,
+			resource_type: "image",
+			type: "upload",
+		});
+		return response;
+	} catch (error) {
+		console.log(
+			"\n:: utils => cloudinary => deleteFeaturedImageFromCloudinary => error: ",
+			error
+		);
 		return null;
 	}
 };
