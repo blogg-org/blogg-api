@@ -97,7 +97,7 @@ AUTH CONTROLLER - REFRESH
 ==============================================
  */
 export const handleRefresh = asyncHandler(async (req, res) => {
-	console.log("\n:: handleRefresh => refresh_token: ", req.cookies);
+	// console.log("\n:: handleRefresh => refresh_token: ", req.cookies);
 	const cookies = req.cookies;
 	if (!cookies?.refresh_token) {
 		return res.status(401).json(new ApiError(401, "Unauthorized").toJSON());

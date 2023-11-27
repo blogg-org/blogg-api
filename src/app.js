@@ -3,6 +3,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
+import blogRouter from "./routes/blog.route.js";
 
 /*
 ==============================================
@@ -51,6 +52,7 @@ app.use(cookieParser());
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/blogs", blogRouter);
 
 /*
 ==============================================
