@@ -11,7 +11,7 @@ AUTH CONTROLLER - SIGNUP
  */
 export const handleSignup = asyncHandler(async (req, res) => {
 	const { fullname, email, password } = req.body;
-	console.log(fullname, email, password);
+	// console.log(fullname, email, password);
 
 	if (!fullname || !email || !password) {
 		return res
@@ -80,7 +80,7 @@ export const handleSignin = asyncHandler(async (req, res) => {
 	user.refreshToken = refreshToken;
 	await user.save();
 	res.cookie("refresh_token", refreshToken, {
-		expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // expires in 1 day
+		expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // expires in 7 day
 		httpOnly: true,
 	});
 

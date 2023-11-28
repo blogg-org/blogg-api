@@ -14,11 +14,6 @@ BLOG CONTROLLER - GET ALL BLOGS
  */
 export const handleGetAllBlogs = asyncHandler(async (req, res) => {
 	const blogs = await Blog.find();
-	if (blogs.length === 0) {
-		return res
-			.status(404)
-			.json(new ApiError(404, "No blogs found.").toJSON());
-	}
 	return res.status(200).json(new ApiResponse(200, blogs));
 });
 
@@ -28,7 +23,7 @@ BLOG CONTROLLER - ADD NEW BLOG
 ==============================================
  */
 export const handleAddNewBlog = asyncHandler(async (req, res) => {
-	// console.log(req);
+	// console.log("\n:: blog.controller => handleAddNewBlog => request: ", req);
 	const { title, slug, content, status } = req.body;
 
 	if (!title || !slug || !content || !status) {
@@ -37,7 +32,7 @@ export const handleAddNewBlog = asyncHandler(async (req, res) => {
 			.json(new ApiError(400, "All fields are required").toJSON());
 	}
 
-	const featuredImageLocalPath = req.file.path;
+	const featuredImageLocalPath = req.file?.path;
 	if (!featuredImageLocalPath) {
 		return res
 			.status(400)
@@ -47,10 +42,10 @@ export const handleAddNewBlog = asyncHandler(async (req, res) => {
 	const featuredImageFromCloudinary = await uploadOnCloudinary(
 		featuredImageLocalPath
 	);
-	console.log(
-		"\n:: featuredImage from cloudinary: ",
-		featuredImageFromCloudinary
-	);
+	// console.log(
+	// 	"\n:: featuredImage from cloudinary: ",
+	// 	featuredImageFromCloudinary
+	// );
 	if (!featuredImageFromCloudinary) {
 		return res
 			.status(500)
@@ -93,7 +88,6 @@ export const handleAddNewBlog = asyncHandler(async (req, res) => {
 BLOG CONTROLLER - REMOVE BLOG
 ==============================================
  */
-
 export const handleRemoveBlog = asyncHandler(async (req, res) => {
 	// get blogId from route url using req.params
 	const { blogId } = req.params;
@@ -116,10 +110,10 @@ export const handleRemoveBlog = asyncHandler(async (req, res) => {
 			.json(new ApiError(403, "You are not allowed to delete.").toJSON());
 	}
 	const deleteResponse = await Blog.deleteOne({ _id: blog._id });
-	console.log(
-		"\n:: blog.controller => handleRemoveBlog => deleteResponse: ",
-		deleteResponse
-	);
+	// console.log(
+	// 	"\n:: blog.controller => handleRemoveBlog => deleteResponse: ",
+	// 	deleteResponse
+	// );
 	if (!deleteResponse?.acknowledged) {
 		return res
 			.status(500)
@@ -129,13 +123,13 @@ export const handleRemoveBlog = asyncHandler(async (req, res) => {
 	const deleteFeaturedImageResponse = await deleteFeaturedImageFromCloudinary(
 		blog.featuredImage
 	);
-	console.log(
-		"\n:: blog.controller => handleRemoveBlog => deleteFeaturedImageResponse: ",
-		deleteFeaturedImageResponse
-	);
+	// console.log(
+	// 	"\n:: blog.controller => handleRemoveBlog => deleteFeaturedImageResponse: ",
+	// 	deleteFeaturedImageResponse
+	// );
 	return res
 		.status(200)
-		.json(new ApiResponse(200, null, "Deleted successfully."));
+		.json(new ApiResponse(200, blog, "Deleted successfully."));
 });
 
 /*
@@ -176,14 +170,17 @@ export const handleUpdateBlog = asyncHandler(async (req, res) => {
 	const { title, slug, content, status } = req.body;
 
 	// Handle updated featured image, if provided
-	let featuredImageFromCloudinary = existingBlog.featuredImage; // Default to existing image
+	let featuredImageUrl = existingBlog.featuredImage; // Default to existing image
 
-	const featuredImageLocalPath = req.file.path;
+	const featuredImageLocalPath = req.file?.path;
 	if (featuredImageLocalPath) {
-		featuredImageFromCloudinary = await uploadOnCloudinary(
+		const featuredImageFromCloudinary = await uploadOnCloudinary(
 			featuredImageLocalPath
 		);
-		console.log(featuredImageFromCloudinary);
+		// console.log(
+		// 	"featuredImageFromCloudinary: ",
+		// 	featuredImageFromCloudinary
+		// );
 		if (!featuredImageFromCloudinary) {
 			return res
 				.status(500)
@@ -194,6 +191,7 @@ export const handleUpdateBlog = asyncHandler(async (req, res) => {
 					).toJSON()
 				);
 		}
+		featuredImageUrl = featuredImageFromCloudinary.url;
 	}
 
 	// Update the blog with the new data
@@ -201,7 +199,7 @@ export const handleUpdateBlog = asyncHandler(async (req, res) => {
 	existingBlog.slug = slug || existingBlog.slug;
 	existingBlog.content = content || existingBlog.content;
 	existingBlog.status = status || existingBlog.status;
-	existingBlog.featuredImage = featuredImageFromCloudinary.url;
+	existingBlog.featuredImage = featuredImageUrl;
 
 	// Save the updated blog
 	const updatedBlog = await existingBlog.save();
