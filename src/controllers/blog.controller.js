@@ -42,10 +42,10 @@ export const handleAddNewBlog = asyncHandler(async (req, res) => {
 	const featuredImageFromCloudinary = await uploadOnCloudinary(
 		featuredImageLocalPath
 	);
-	// console.log(
-	// 	"\n:: featuredImage from cloudinary: ",
-	// 	featuredImageFromCloudinary
-	// );
+	console.log(
+		"\n:: featuredImage from cloudinary: ",
+		featuredImageFromCloudinary
+	);
 	if (!featuredImageFromCloudinary) {
 		return res
 			.status(500)
@@ -63,7 +63,10 @@ export const handleAddNewBlog = asyncHandler(async (req, res) => {
 		slug: slug,
 		content: content,
 		status: status,
-		featuredImage: featuredImageFromCloudinary.url,
+		featuredImage: {
+			url: featuredImageFromCloudinary.secure_url,
+			publicId: featuredImageFromCloudinary.public_id,
+		},
 		author: _id,
 	});
 
@@ -121,7 +124,7 @@ export const handleRemoveBlog = asyncHandler(async (req, res) => {
 	}
 	// after blog is deleted from database, delete associated featured image from cloudinary
 	const deleteFeaturedImageResponse = await deleteFeaturedImageFromCloudinary(
-		blog.featuredImage
+		blog.featuredImage.publicId
 	);
 	// console.log(
 	// 	"\n:: blog.controller => handleRemoveBlog => deleteFeaturedImageResponse: ",
