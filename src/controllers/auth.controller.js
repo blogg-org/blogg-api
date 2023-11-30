@@ -154,3 +154,49 @@ export const handleSignout = asyncHandler(async (req, res) => {
 		.status(200)
 		.json(new ApiResponse(200, null, "Sign out successful."));
 });
+
+/*
+==============================================
+AUTH CONTROLLER - CHANGE PASSWORD
+==============================================
+ */
+export const handleChangePassword = asyncHandler(async (req, res) => {
+	const { _id } = req.user;
+	const { oldPassword, newPassword } = req.body;
+
+	const user = await User.findById(_id);
+	if (!user) {
+		return res
+			.status(500)
+			.json(new ApiError(500, "Can not update password.").toJSON());
+	}
+	// compare password
+	const isPasswordMatched = await user.comparePassword(oldPassword);
+	if (!isPasswordMatched) {
+		return res
+			.status(401)
+			.json(
+				new ApiError(
+					401,
+					"Your recent password did not match."
+				).toJSON()
+			);
+	}
+
+	user.password = newPassword;
+	const response = await user.save();
+	if (!response) {
+		return res
+			.status(500)
+			.json(
+				new ApiError(
+					500,
+					"Something went wrong while updating."
+				).toJSON()
+			);
+	}
+
+	return res
+		.status(200)
+		.json(new ApiResponse(200, null, "Password updated."));
+});

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import limiter from "../middlewares/limiter.middleware.js";
 import {
+	handleChangePassword,
 	handleRefresh,
 	handleSignin,
 	handleSignout,
@@ -19,5 +20,6 @@ authRouter.route("/signup").post(limiter, handleSignup);
 authRouter.route("/signin").post(limiter, handleSignin);
 authRouter.route("/refresh").get(handleRefresh);
 authRouter.route("/signout").post(checkAuth, handleSignout);
+authRouter.route("/change-password").put(checkAuth, handleChangePassword);
 
 export default authRouter;
