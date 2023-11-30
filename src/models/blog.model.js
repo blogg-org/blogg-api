@@ -1,5 +1,16 @@
 import mongoose from "mongoose";
 
+const featuredImageSchema = new mongoose.Schema({
+	publicId: {
+		type: String,
+		required: true,
+	},
+	url: {
+		type: String,
+		required: true,
+	},
+});
+
 const blogSchema = new mongoose.Schema(
 	{
 		title: {
@@ -17,9 +28,8 @@ const blogSchema = new mongoose.Schema(
 			required: true,
 		},
 		featuredImage: {
-			type: String,
+			type: featuredImageSchema,
 			required: true,
-			maxLength: 255,
 		},
 		status: {
 			type: String,
