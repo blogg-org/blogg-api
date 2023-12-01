@@ -1,8 +1,10 @@
-import { User } from "../models/user.model.js";
-import ApiResponse from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
-import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
+import { User } from "../models/user.model.js";
+import totp from "../../config/totp.config.js";
+import { sendMail } from "../utils/sendMail.js";
+import ApiResponse from "../utils/ApiResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 /*
 ==============================================
@@ -199,4 +201,66 @@ export const handleChangePassword = asyncHandler(async (req, res) => {
 	return res
 		.status(200)
 		.json(new ApiResponse(200, null, "Password updated."));
+});
+
+/*
+==============================================
+AUTH CONTROLLER - VERIFY EMAIL AND SEND OTP
+==============================================
+ */
+export const handleVerifyEmail = asyncHandler(async (req, res) => {
+	const { email } = req.body;
+
+	const user = await User.findOne({ email });
+	if (!user) {
+		return res.status(400).json(new ApiError(400, "Invalid credential."));
+	}
+
+	// generate OTP
+	totp.label = user.fullname;
+	const otp = totp.generate();
+
+	// send otp into the email
+	const mailOptions = {
+		from: `blogg <${process.env.EMAIL_SEND_FROM}>`,
+		to: user.email,
+		subject: "OTP Verification",
+		html: `<div>Your OTP is: <b>${otp}</b></div><div>This OTP will expire in 60 seconds.</div>`,
+	};
+	const sendMailResponse = await sendMail(mailOptions);
+
+	// check sendMailResponse
+	if (!sendMailResponse) {
+		return res
+			.status(500)
+			.json(
+				new ApiError(
+					500,
+					"Something went wrong while sending OTP."
+				).toJSON()
+			);
+	}
+
+	return res
+		.status(200)
+		.json(new ApiResponse(200, { email: user.email }, "Email verified."));
+});
+
+/*
+==============================================
+AUTH CONTROLLER - VERIFY OTP
+==============================================
+ */
+export const handleVeriryOTP = asyncHandler((req, res) => {
+	const { otp } = req.body;
+
+	// verify otp
+	const delta = totp.validate({ token: otp, window: 1 });
+	if (!delta) {
+		return res
+			.status(400)
+			.json(new ApiError(400, "OTP is not valid.").toJSON());
+	}
+
+	return res.status(200).json(new ApiResponse(200, null, "OTP verified"));
 });
