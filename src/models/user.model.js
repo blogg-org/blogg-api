@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
 import pkg from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 const { genSalt, hash, compare } = pkg;
 
 /*

@@ -1,11 +1,11 @@
-import { Blog } from "../models/blog.model.js";
+import {
+	uploadOnCloudinary,
+	deleteFeaturedImageFromCloudinary,
+} from "../utils/cloudinary.js";
 import ApiError from "../utils/ApiError.js";
+import { Blog } from "../models/blog.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import {
-	deleteFeaturedImageFromCloudinary,
-	uploadOnCloudinary,
-} from "../utils/cloudinary.js";
 
 /*
 ==============================================
@@ -23,7 +23,6 @@ BLOG CONTROLLER - ADD NEW BLOG
 ==============================================
  */
 export const handleAddNewBlog = asyncHandler(async (req, res) => {
-	// console.log("\n:: blog.controller => handleAddNewBlog => request: ", req);
 	const { title, slug, content, status } = req.body;
 
 	if (!title || !slug || !content || !status) {
@@ -41,10 +40,6 @@ export const handleAddNewBlog = asyncHandler(async (req, res) => {
 
 	const featuredImageFromCloudinary = await uploadOnCloudinary(
 		featuredImageLocalPath
-	);
-	console.log(
-		"\n:: featuredImage from cloudinary: ",
-		featuredImageFromCloudinary
 	);
 	if (!featuredImageFromCloudinary) {
 		return res
@@ -83,7 +78,6 @@ export const handleAddNewBlog = asyncHandler(async (req, res) => {
 	return res
 		.status(201)
 		.json(new ApiResponse(201, blog, "Blog created successfully."));
-	// console.log("\n:: blog.controller => addNewBlog => blog: ", blog);
 });
 
 /*
@@ -94,7 +88,6 @@ BLOG CONTROLLER - REMOVE BLOG
 export const handleRemoveBlog = asyncHandler(async (req, res) => {
 	// get blogId from route url using req.params
 	const { blogId } = req.params;
-	// console.log("\n:: blog.controller => handleRemoveBlog => blogId: ", blogId);
 
 	// find blog using blogId
 	const blog = await Blog.findById(blogId);
@@ -112,24 +105,19 @@ export const handleRemoveBlog = asyncHandler(async (req, res) => {
 			.status(403)
 			.json(new ApiError(403, "You are not allowed to delete.").toJSON());
 	}
+
 	const deleteResponse = await Blog.deleteOne({ _id: blog._id });
-	// console.log(
-	// 	"\n:: blog.controller => handleRemoveBlog => deleteResponse: ",
-	// 	deleteResponse
-	// );
 	if (!deleteResponse?.acknowledged) {
 		return res
 			.status(500)
 			.json(new ApiError(500, "Error occured while deleting.").toJSON());
 	}
+
 	// after blog is deleted from database, delete associated featured image from cloudinary
 	const deleteFeaturedImageResponse = await deleteFeaturedImageFromCloudinary(
 		blog.featuredImage.publicId
 	);
-	// console.log(
-	// 	"\n:: blog.controller => handleRemoveBlog => deleteFeaturedImageResponse: ",
-	// 	deleteFeaturedImageResponse
-	// );
+
 	return res
 		.status(200)
 		.json(new ApiResponse(200, blog, "Deleted successfully."));
@@ -180,10 +168,6 @@ export const handleUpdateBlog = asyncHandler(async (req, res) => {
 		const featuredImageFromCloudinary = await uploadOnCloudinary(
 			featuredImageLocalPath
 		);
-		// console.log(
-		// 	"featuredImageFromCloudinary: ",
-		// 	featuredImageFromCloudinary
-		// );
 		if (!featuredImageFromCloudinary) {
 			return res
 				.status(500)

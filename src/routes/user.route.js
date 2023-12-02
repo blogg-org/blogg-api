@@ -1,8 +1,8 @@
-import express from "express";
 import {
 	handleGetAllUsers,
 	handleGetCurrentUser,
 } from "../controllers/user.controller.js";
+import express from "express";
 import checkAuth from "../middlewares/checkAuth.middleware.js";
 
 /*
