@@ -13,7 +13,6 @@ AUTH CONTROLLER - SIGNUP
  */
 export const handleSignup = asyncHandler(async (req, res) => {
 	const { fullname, email, password } = req.body;
-	// console.log(fullname, email, password);
 
 	if (!fullname || !email || !password) {
 		return res
@@ -99,7 +98,6 @@ AUTH CONTROLLER - REFRESH
 ==============================================
  */
 export const handleRefresh = asyncHandler(async (req, res) => {
-	// console.log("\n:: handleRefresh => refresh_token: ", req.cookies);
 	const cookies = req.cookies;
 	if (!cookies?.refresh_token) {
 		return res.status(401).json(new ApiError(401, "Unauthorized").toJSON());
@@ -225,7 +223,7 @@ export const handleVerifyEmail = asyncHandler(async (req, res) => {
 		from: `blogg <${process.env.EMAIL_SEND_FROM}>`,
 		to: user.email,
 		subject: "OTP Verification",
-		html: `<div>Your OTP is: <b>${otp}</b></div><div>This OTP will expire in 60 seconds.</div>`,
+		html: `<div>Your OTP is: <b>${otp}</b></div><br /><div>This OTP will expire in 60 seconds.</div>`,
 	};
 	const sendMailResponse = await sendMail(mailOptions);
 
@@ -256,11 +254,44 @@ export const handleVeriryOTP = asyncHandler((req, res) => {
 
 	// verify otp
 	const delta = totp.validate({ token: otp, window: 1 });
-	if (!delta) {
+
+	if (delta === null) {
 		return res
 			.status(400)
 			.json(new ApiError(400, "OTP is not valid.").toJSON());
 	}
 
 	return res.status(200).json(new ApiResponse(200, null, "OTP verified"));
+});
+
+/*
+==============================================
+AUTH CONTROLLER - RESET PASSWORD
+==============================================
+ */
+export const handleResetPassword = asyncHandler(async (req, res) => {
+	const { email, newPassword } = req.body;
+
+	if (!newPassword) {
+		return res
+			.status(400)
+			.json(new ApiError(400, "New password is required.").toJSON());
+	}
+
+	const user = await User.findOne({ email });
+	if (!user) {
+		return res.status(404).json(new ApiError(404, "User not found."));
+	}
+
+	user.password = newPassword;
+	const updatedUser = await user.save();
+	if (!updatedUser) {
+		return res
+			.status(500)
+			.json(new ApiError(500, "Something went wrong. Please try again."));
+	}
+
+	return res
+		.status(200)
+		.json(new ApiResponse(200, null, "Password is reset."));
 });

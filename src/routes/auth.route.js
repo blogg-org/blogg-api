@@ -5,6 +5,7 @@ import {
 	handleSignout,
 	handleVeriryOTP,
 	handleVerifyEmail,
+	handleResetPassword,
 	handleChangePassword,
 } from "../controllers/auth.controller.js";
 import { Router } from "express";
@@ -25,5 +26,6 @@ authRouter.route("/signout").post(checkAuth, handleSignout);
 authRouter.route("/change-password").put(checkAuth, handleChangePassword);
 authRouter.route("/verify-email").post(limiter, handleVerifyEmail);
 authRouter.route("/verify-otp").post(limiter, handleVeriryOTP);
+authRouter.route("/reset-password").put(limiter, handleResetPassword);
 
 export default authRouter;
