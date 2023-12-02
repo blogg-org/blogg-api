@@ -8,9 +8,6 @@ const limiter = rateLimit({
 	standardHeaders: "draft-7",
 	legacyHeaders: false,
 	handler: (req, res, next, options) => {
-		// console.log(
-		// 	`\n:: Limiter => ${req.method} => ${req.url} => Message: ${options.message}`
-		// );
 		res.status(options.statusCode).json(
 			new ApiResponse(options.statusCode, null, options.message)
 		);
