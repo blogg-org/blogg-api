@@ -83,6 +83,8 @@ export const handleSignin = asyncHandler(async (req, res) => {
 	res.cookie("refresh_token", refreshToken, {
 		expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // expires in 7 day
 		httpOnly: true,
+		secure: true,
+		sameSite: "None",
 	});
 
 	// generate access token
