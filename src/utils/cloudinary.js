@@ -1,5 +1,6 @@
 import fs from "fs";
 import cloudinary from "../../config/cloudinary.config.js";
+import { generateHashColorValue } from "./helpers.js";
 
 export const uploadOnCloudinary = async (localFilePath) => {
 	if (!localFilePath) return null;
@@ -25,7 +26,21 @@ export const deleteFeaturedImageFromCloudinary = async (publicId) => {
 			resource_type: "image",
 			type: "upload",
 		});
-		return response;
+		return await response;
+	} catch (error) {
+		return null;
+	}
+};
+
+export const generateAvatarFromFullnameInitials = async (text, options) => {
+	try {
+		const response = await cloudinary.uploader.text(text, {
+			font_family: "Roboto",
+			font_size: 32,
+			font_color: generateHashColorValue(),
+			background: generateHashColorValue(),
+		});
+		return await response;
 	} catch (error) {
 		return null;
 	}

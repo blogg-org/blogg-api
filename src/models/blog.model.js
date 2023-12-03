@@ -1,15 +1,5 @@
 import mongoose from "mongoose";
-
-const featuredImageSchema = new mongoose.Schema({
-	publicId: {
-		type: String,
-		required: true,
-	},
-	url: {
-		type: String,
-		required: true,
-	},
-});
+import { imageSchema } from "./image.model.js";
 
 const blogSchema = new mongoose.Schema(
 	{
@@ -28,7 +18,7 @@ const blogSchema = new mongoose.Schema(
 			required: true,
 		},
 		featuredImage: {
-			type: featuredImageSchema,
+			type: imageSchema,
 			required: true,
 		},
 		status: {
