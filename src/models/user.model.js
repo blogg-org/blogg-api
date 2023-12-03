@@ -1,6 +1,7 @@
 import pkg from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { imageSchema } from "./image.model.js";
 const { genSalt, hash, compare } = pkg;
 
 /*
@@ -24,6 +25,9 @@ const userSchema = new mongoose.Schema(
 		password: {
 			type: String,
 			required: true,
+		},
+		avatar: {
+			type: imageSchema,
 		},
 		refreshToken: {
 			type: String,

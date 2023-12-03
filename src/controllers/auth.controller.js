@@ -5,6 +5,8 @@ import totp from "../../config/totp.config.js";
 import { sendMail } from "../utils/sendMail.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { getFullnameInitials } from "../utils/helpers.js";
+import { generateAvatarFromFullnameInitials } from "../utils/cloudinary.js";
 
 /*
 ==============================================
@@ -27,7 +29,21 @@ export const handleSignup = asyncHandler(async (req, res) => {
 			.json(new ApiError(409, "Email is already used").toJSON());
 	}
 
-	const user = new User({ fullname, email, password });
+	// generate avatar from fullname initilas
+	const fullnameInitials = getFullnameInitials(fullname);
+	const avatarResponseFromCloudinary =
+		await generateAvatarFromFullnameInitials(fullnameInitials);
+	if (!avatarResponseFromCloudinary) {
+		return res
+			.status(500)
+			.json(new ApiError(500, "Something went wrong. Please try again."));
+	}
+	const avatar = {
+		publicId: avatarResponseFromCloudinary.public_id,
+		url: avatarResponseFromCloudinary.secure_url,
+	};
+
+	const user = new User({ fullname, email, password, avatar });
 	const userFromDB = await user.save();
 	if (userFromDB) {
 		return res
@@ -39,7 +55,7 @@ export const handleSignup = asyncHandler(async (req, res) => {
 			.json(
 				new ApiError(
 					500,
-					"Something went wrong while signing up"
+					"Something went wrong while signing up. Please try again."
 				).toJSON()
 			);
 	}
