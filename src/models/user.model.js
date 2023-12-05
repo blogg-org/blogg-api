@@ -2,6 +2,7 @@ import pkg from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { imageSchema } from "./image.model.js";
+
 const { genSalt, hash, compare } = pkg;
 
 /*
@@ -24,12 +25,14 @@ const userSchema = new mongoose.Schema(
 		},
 		password: {
 			type: String,
-			required: true,
 		},
 		avatar: {
 			type: imageSchema,
 		},
 		refreshToken: {
+			type: String,
+		},
+		googleId: {
 			type: String,
 		},
 	},
@@ -48,7 +51,7 @@ userSchema.pre("save", async function (next) {
 		const user = this;
 		if (!user.isModified("password")) return next();
 		const salt = await genSalt(10);
-		const hashedPassword = await hash(user.password, salt);
+		const hashedPassword = hash(user.password, salt);
 		user.password = hashedPassword;
 		next();
 	} catch (error) {
@@ -59,7 +62,7 @@ userSchema.pre("save", async function (next) {
 // compare password for signin
 userSchema.method("comparePassword", async function comparePassword(password) {
 	const user = this;
-	const isMatched = await compare(password, user.password);
+	const isMatched = compare(password, user.password);
 	return isMatched;
 });
 
