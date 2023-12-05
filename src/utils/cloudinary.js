@@ -1,5 +1,5 @@
 import fs from "fs";
-import cloudinary from "../../config/cloudinary.config.js";
+import cloudinary from "../config/cloudinary.config.js";
 import { generateHashColorValue } from "./helpers.js";
 
 export const uploadOnCloudinary = async (localFilePath) => {

@@ -7,6 +7,7 @@ import {
 	handleVerifyEmail,
 	handleResetPassword,
 	handleChangePassword,
+	handleGoogleAuth,
 } from "../controllers/auth.controller.js";
 import { Router } from "express";
 import limiter from "../middlewares/limiter.middleware.js";
@@ -27,5 +28,6 @@ authRouter.route("/change-password").put(checkAuth, handleChangePassword);
 authRouter.route("/verify-email").post(limiter, handleVerifyEmail);
 authRouter.route("/verify-otp").post(limiter, handleVeriryOTP);
 authRouter.route("/reset-password").put(limiter, handleResetPassword);
+authRouter.route("/google").post(limiter, handleGoogleAuth);
 
 export default authRouter;

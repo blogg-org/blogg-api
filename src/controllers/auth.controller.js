@@ -1,12 +1,16 @@
-import jwt from "jsonwebtoken";
+import {
+	deleteFeaturedImageFromCloudinary,
+	generateAvatarFromFullnameInitials,
+} from "../utils/cloudinary.js";
+import jwt, { decode } from "jsonwebtoken";
 import ApiError from "../utils/ApiError.js";
+import totp from "../config/totp.config.js";
 import { User } from "../models/user.model.js";
-import totp from "../../config/totp.config.js";
 import { sendMail } from "../utils/sendMail.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { oAuth2Client } from "../config/oauth.config.js";
 import { getFullnameInitials } from "../utils/helpers.js";
-import { generateAvatarFromFullnameInitials } from "../utils/cloudinary.js";
 
 /*
 ==============================================
@@ -93,6 +97,66 @@ export const handleSignin = asyncHandler(async (req, res) => {
 	}
 
 	// generate refresh token and save into the database
+	const refreshToken = user.generateRefreshToken();
+	user.refreshToken = refreshToken;
+	await user.save();
+	res.cookie("refresh_token", refreshToken, {
+		expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // expires in 7 day
+		httpOnly: true,
+		secure: true,
+		sameSite: "None",
+	});
+
+	// generate access token
+	const accessToken = user.generateAccessToken();
+	res.status(200).json(
+		new ApiResponse(200, { accessToken }, "Sign in successful")
+	);
+});
+
+/*
+==============================================
+AUTH CONTROLLER - SIGNIN WITH GOOGLE
+==============================================
+ */
+export const handleGoogleAuth = asyncHandler(async (req, res) => {
+	const { code } = req.body;
+	const response = await oAuth2Client.getToken(code);
+	const token = response.tokens.id_token;
+	const decoded = decode(token);
+
+	const { sub, name, email, picture } = decoded;
+
+	let user = await User.findOne({ email: email });
+
+	if (!user) {
+		user = await User.create({
+			fullname: name,
+			email: email,
+			avatar: { url: picture },
+			googleId: sub,
+		});
+		if (!user) {
+			return res
+				.status(500)
+				.json(
+					new ApiError(500, "Something went wrong. Please try again.")
+				);
+		}
+	} else {
+		if (!user.googleId) {
+			user.googleId = sub;
+			if (user.avatar.publicId) {
+				const response = await deleteFeaturedImageFromCloudinary(use);
+				if (response) {
+					user.avatar.publicId = "";
+				}
+			}
+			user.avatar.url = picture;
+		}
+	}
+
+	// generate refresh token and save to the database
 	const refreshToken = user.generateRefreshToken();
 	user.refreshToken = refreshToken;
 	await user.save();
