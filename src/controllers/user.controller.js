@@ -28,7 +28,7 @@ export const handleGetCurrentUser = asyncHandler(async (req, res) => {
 	const user = req.user;
 
 	const userFromDB = await User.findById(user._id).select(
-		"-password -refreshToken"
+		"-password -refreshToken -__v -googleId"
 	);
 	if (!userFromDB) {
 		return res

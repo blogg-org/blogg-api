@@ -49,11 +49,7 @@ export const handleSignup = asyncHandler(async (req, res) => {
 
 	const user = new User({ fullname, email, password, avatar });
 	const userFromDB = await user.save();
-	if (userFromDB) {
-		return res
-			.status(201)
-			.json(new ApiResponse(201, null, "Sign up successful"));
-	} else {
+	if (!userFromDB) {
 		return res
 			.status(500)
 			.json(
@@ -62,6 +58,10 @@ export const handleSignup = asyncHandler(async (req, res) => {
 					"Something went wrong while signing up. Please try again."
 				).toJSON()
 			);
+	} else {
+		return res
+			.status(201)
+			.json(new ApiResponse(201, null, "Sign up successful"));
 	}
 });
 
@@ -147,7 +147,9 @@ export const handleGoogleAuth = asyncHandler(async (req, res) => {
 		if (!user.googleId) {
 			user.googleId = sub;
 			if (user.avatar.publicId) {
-				const response = await deleteFeaturedImageFromCloudinary(use);
+				const response = await deleteFeaturedImageFromCloudinary(
+					user.avatar.publicId
+				);
 				if (response) {
 					user.avatar.publicId = "";
 				}
