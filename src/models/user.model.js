@@ -51,7 +51,7 @@ userSchema.pre("save", async function (next) {
 		const user = this;
 		if (!user.isModified("password")) return next();
 		const salt = await genSalt(10);
-		const hashedPassword = hash(user.password, salt);
+		const hashedPassword = await hash(user.password, salt);
 		user.password = hashedPassword;
 		next();
 	} catch (error) {
@@ -62,7 +62,10 @@ userSchema.pre("save", async function (next) {
 // compare password for signin
 userSchema.method("comparePassword", async function comparePassword(password) {
 	const user = this;
-	const isMatched = compare(password, user.password);
+	if (!user.password) {
+		return false;
+	}
+	const isMatched = await compare(password, user.password);
 	return isMatched;
 });
 
