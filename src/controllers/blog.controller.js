@@ -161,7 +161,7 @@ export const handleUpdateBlog = asyncHandler(async (req, res) => {
 	const { title, slug, content, status } = req.body;
 
 	// Handle updated featured image, if provided
-	let featuredImageUrl = existingBlog.featuredImage; // Default to existing image
+	let featuredImageUrl = existingBlog.featuredImage.url; // Default to existing image
 
 	const featuredImageLocalPath = req.file?.path;
 	if (featuredImageLocalPath) {
@@ -178,7 +178,7 @@ export const handleUpdateBlog = asyncHandler(async (req, res) => {
 					).toJSON()
 				);
 		}
-		featuredImageUrl = featuredImageFromCloudinary.url;
+		featuredImageUrl = featuredImageFromCloudinary.secure_url;
 	}
 
 	// Update the blog with the new data
@@ -186,7 +186,7 @@ export const handleUpdateBlog = asyncHandler(async (req, res) => {
 	existingBlog.slug = slug || existingBlog.slug;
 	existingBlog.content = content || existingBlog.content;
 	existingBlog.status = status || existingBlog.status;
-	existingBlog.featuredImage = featuredImageUrl;
+	existingBlog.featuredImage.url = featuredImageUrl;
 
 	// Save the updated blog
 	const updatedBlog = await existingBlog.save();
